@@ -20,13 +20,13 @@ DS5500_RecSys/
 └── figures/                        # PNG outputs written by the EDA notebooks
 ```
 
-Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook loads the `*_subsampled.parquet` files (gitignored) produced by `DataIngestion_Subsample.ipynb`, but not all from the same location — see the path caveat below.
+Run ingestion before the cart-to-purchase, item/category, and event-level EDA notebooks, which load its subsampled event files. `preliminary_eda.ipynb` reads raw files and can run independently. Data locations differ between notebooks; see the path table below.
 
 ## Notebooks
 
 | Notebook | Purpose |
 |---|---|
-| `DataIngestion_Subsample.ipynb` | Step 1: ingest raw events, define active users (K≥5), write `data/subsampled/` |
+| `DataIngestion_Subsample.ipynb` | Step 1: ingest raw events, define active users (K≥5), write subsampled parquet files (default `Desktop/DS5500/data/subsampled/`) |
 | `preliminary_eda.ipynb` | Broad preliminary EDA (sparsity, cart availability) |
 | `event_level_eda.ipynb` | Per-user sequence lengths, 7/14/30-day recency windows |
 | `Cart_to_Purchase_EDA.ipynb` | Dedicated cart→purchase conversion rate + time-gap EDA (hypothesis signal) |
@@ -34,7 +34,7 @@ Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook 
 
 ## How to Run
 
-The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.parquet`). Download the [Synerise RecSys 2025 dataset](https://synerise.com/recsys-2025-challenge/) parquet files before running anything.
+The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.parquet`). Download the Synerise RecSys 2025 dataset parquet files from the [official challenge data page](https://recsys.synerise.com/data-set) before running anything.
 
 > **Path caveat:** the notebooks do not share one consistent data path today. Each notebook has its own hard-coded paths, so you will likely need to adjust them (or your working directory) before the notebook will run. The exact defaults, read from each notebook's loading cell, are:
 >
@@ -48,8 +48,8 @@ The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.p
 >
 > After running `DataIngestion_Subsample.ipynb`, the simplest path is to copy or symlink `Desktop/DS5500/data/subsampled/*_subsampled.parquet` into a `data/` folder next to the notebook you want to run (for `ItemCategoryEDA.ipynb`), or into the notebook's working directory (for `event_level_eda.ipynb`).
 
-1. **Run Step 1** (`DataIngestion_Subsample.ipynb`) to produce the K≥5 active-user subsample. This writes the `*_subsampled.parquet` files the other EDA notebooks load.
-2. **Then open any EDA notebook.** Figures are written to `figures/*.png` (or the notebook working directory); the commit-worthy outputs are checked in under `figures/`.
+1. **Run Step 1** (`DataIngestion_Subsample.ipynb`) to produce the K≥5 active-user subsample. This writes the `*_subsampled.parquet` files that the cart-to-purchase, item/category, and event-level EDA notebooks load.
+2. **Then open any EDA notebook** (`preliminary_eda.ipynb` can run independently — see the path table). Figures are written to `figures/*.png` (or the notebook working directory); the commit-worthy outputs are checked in under `figures/`.
 
 ## Requirements
 
