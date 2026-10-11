@@ -10,15 +10,17 @@ This project will test whether incorporating cart history improves next-purchase
 ```
 DS5500_RecSys/
 ├── README.md                       # This file (proposal + how to run)
+├── .gitignore                      # Ignores data/, *.parquet, *.csv, notebook checkpoints
 ├── DataIngestion_Subsample.ipynb   # Step 1: ingest, dedup, filter to K≥5 active users
 ├── preliminary_eda.ipynb           # Broad sparsity / cart-availability EDA
+├── event_level_eda.ipynb           # Per-user sequence lengths, recency windows
 ├── Cart_to_Purchase_EDA.ipynb      # Cart→purchase conversion + time-gap EDA
 ├── ItemCategoryEDA.ipynb           # Item popularity + category clustering
-├── event_level_eda.ipynb           # Per-user sequence lengths, recency windows
+├── preliminary_results_combined.png
 └── figures/                        # PNG outputs written by the EDA notebooks
 ```
 
-Notebooks are not run in a fixed order beyond Step 1 → EDA. Each EDA notebook reads `data/subsampled/*_subsampled.parquet` (gitignored) produced by `DataIngestion_Subsample.ipynb`.
+Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook loads the `*_subsampled.parquet` files (gitignored) produced by `DataIngestion_Subsample.ipynb`, but not all from the same location — see the path caveat below.
 
 ## Notebooks
 
@@ -32,13 +34,22 @@ Notebooks are not run in a fixed order beyond Step 1 → EDA. Each EDA notebook 
 
 ## How to Run
 
-1. **Data setup.** Clone the [Synerise RecSys 2025 dataset](https://synerise.com/recsys-2025-challenge/) parquet files into `data/raw/` (paths are configured inside `DataIngestion_Subsample.ipynb`; see the `DATA_DIR` cell).
-2. **Run Step 1 first** so `data/subsampled/*_subsampled.parquet` exists:
-   ```bash
-   jupyter execute DataIngestion_Subsample.ipynb   # or open it in Jupyter and run all
-   ```
-3. **Then open any EDA notebook.** `Cart_to_Purchase_EDA.ipynb`, `event_level_eda.ipynb`, and `ItemCategoryEDA.ipynb` expect `data/subsampled/*_subsampled.parquet` relative to the notebook (or a `data/subsampled/` under the notebook's directory). `preliminary_eda.ipynb` reads raw `*.parquet` files directly (not subsampled) — see the `files` cell for expected paths.
-4. Figures are written to `figures/*.png` (or the notebook working directory); commit-worthy outputs are checked in under `figures/`.
+The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.parquet`). Download the [Synerise RecSys 2025 dataset](https://synerise.com/recsys-2025-challenge/) parquet files before running anything.
+
+> **Path caveat:** the notebooks do not share one consistent data path today. Each notebook has its own hard-coded paths, so you will likely need to adjust them (or your working directory) before the notebook will run. The exact defaults, read from each notebook's loading cell, are:
+>
+> | Notebook | Data location it expects |
+> |---|---|
+> | `DataIngestion_Subsample.ipynb` | Reads `Desktop/DS5500/data/raw/`, writes `Desktop/DS5500/data/subsampled/` |
+> | `Cart_to_Purchase_EDA.ipynb` | Tries `/content/subsampled`, `Desktop/DS5500/data/subsampled`, `~/Desktop/DS5500/data/subsampled` (first match wins) |
+> | `ItemCategoryEDA.ipynb` | `data/*_subsampled.parquet` and `data/product_properties.parquet` (relative to notebook working directory) |
+> | `event_level_eda.ipynb` | `*_subsampled.parquet` directly in the current directory (`DATA_DIR = Path(".")`) |
+> | `preliminary_eda.ipynb` | Raw `*.parquet` files in the current directory (not subsampled) |
+>
+> After running `DataIngestion_Subsample.ipynb`, the simplest path is to copy or symlink `Desktop/DS5500/data/subsampled/*_subsampled.parquet` into a `data/` folder next to the notebook you want to run (for `ItemCategoryEDA.ipynb`), or into the notebook's working directory (for `event_level_eda.ipynb`).
+
+1. **Run Step 1** (`DataIngestion_Subsample.ipynb`) to produce the K≥5 active-user subsample. This writes the `*_subsampled.parquet` files the other EDA notebooks load.
+2. **Then open any EDA notebook.** Figures are written to `figures/*.png` (or the notebook working directory); the commit-worthy outputs are checked in under `figures/`.
 
 ## Requirements
 
@@ -46,6 +57,6 @@ Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow` (fo
 
 ## Status & Open Work
 
-- EDA is complete for the hypothesis (see `figures/` and each notebook's takeaways).
+- The ingestion and EDA notebooks for the hypothesis are present (see `figures/` and each notebook's takeaways).
 - **Modeling phase** is the next milestone: build a purchase-history-only baseline and a cart-aware model, with temporal train/test splits and ranking metrics (Recall@K, NDCG@K), following the controlled-experiment setup described in `ItemCategoryEDA.ipynb` §4.
-- Follow-ups worth tracking: add `pyproject.toml` + `pytest`, a CI workflow, and refactor notebook logic into a `ds5500_recsys/` package.
+- Follow-ups worth tracking: add `pyproject.toml` + `pytest`, a CI workflow, refactor notebook logic into a `ds5500_recsys/` package, and normalize the per-notebook data paths above into one shared config.
