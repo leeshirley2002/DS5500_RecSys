@@ -109,4 +109,35 @@ Incomplete conversion remains important. About 75\% of carted pairs never conver
 \section{Conclusion}
 On the Synerise RecSys~2025 active-user cohort, cart-to-purchase behavior supports the project hypothesis: approximately 24.84\% of carted user--SKU pairs later purchase the same item, approximately 81.71\% of purchased pairs had a prior same-SKU cart-add, and the median cart-to-purchase lag is about 11~minutes, with roughly 87\% of converters buying within 24~hours and 95\% within seven days. Cart history is therefore an informative and timely signal of purchase intent, while incomplete conversion and remove-from-cart patterns caution against treating cart-adds as hard positives. The appropriate next step is a controlled comparison of purchase-only versus cart-augmented sequential recommenders under a temporal evaluation split.
 
+\appendix
+\section*{Appendix: Supplementary Material}
+\addcontentsline{toc}{section}{Appendix: Supplementary Material}
+
+This appendix provides supplementary figures for the cart-to-purchase exploratory analysis. The main text reports conversion rates and time-gap statistics; the figures below visualize conversion composition, the lag distribution among converters, and coarse timing buckets.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures/cart_to_purchase_conversion.png}
+\caption{Cart-to-purchase conversion composition on the active-user cohort.
+Left: among carted user--SKU pairs, 24.8\% subsequently convert and 75.2\% do not.
+Right: among purchased user--SKU pairs, 81.7\% were preceded by a same-SKU cart-add.}
+\label{fig:app-conversion}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures/cart_to_purchase_time_gap.png}
+\caption{Time gap from first cart-add to subsequent purchase for converted pairs.
+Left: lag histogram capped at the 99th percentile (median $\approx$11~minutes).
+Right: empirical CDF on a log-hour scale, with 72\% / 87\% / 95\% of converters within 1~hour / 24~hours / 7~days.}
+\label{fig:app-timegap}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/cart_to_purchase_gap_buckets.png}
+\caption{Converted pairs by coarse timing bucket: 72.1\% within 0--1h, 14.4\% within 1--24h, 9.0\% within 1--7d, 3.6\% within 7--30d, and 0.9\% after 30~days.}
+\label{fig:app-buckets}
+\end{figure}
+
 \end{document}
