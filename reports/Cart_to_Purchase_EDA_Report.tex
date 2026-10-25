@@ -1,0 +1,184 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+
+\onehalfspacing
+\title{Cart-to-Purchase Signal Exploratory Data Analysis}
+\author{DS5500 RecSys Project\\
+Behavior-Aware Sequential Recommendation for Next Purchase Prediction}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Purchase histories in retail recommendation settings are often short and sparse, so models that rely only on past purchases may miss products a user is currently considering. This report analyzes the cart-to-purchase signal on the Synerise RecSys~2025 active-user cohort. We find that 24.84\% of carted user--SKU pairs later convert to a purchase, 81.71\% of purchased pairs had a prior same-SKU cart-add, and the median cart-to-purchase lag is approximately 11~minutes. These results support treating cart history as an informative and timely intent signal, while incomplete conversion and remove-from-cart patterns caution against treating cart-adds as hard positives.
+\end{abstract}
+
+\section{Introduction}
+Purchase-based recommenders can under-represent current intent because purchases are infrequent. Add-to-cart events are more frequent and may reflect more recent consideration. This exploratory analysis asks two questions on the Synerise RecSys~2025 active-user cohort---the analysis that most directly motivates the project hypothesis:
+
+\begin{enumerate}
+    \item \textbf{Conversion:} How often does adding an item to the cart lead to a later purchase of the same item by the same user?
+    \item \textbf{Timing:} When conversion occurs, how soon after the first cart-add does the purchase happen?
+\end{enumerate}
+
+If conversion is material (not near zero) and many conversions occur in a short window, cart history is both informative and timely relative to sparse purchase histories, supporting cart-augmented sequential recommenders over purchase-only baselines.
+
+\section{Methods}
+
+\subsection{Data}
+We use three event files from the Step~1 active-user subsample (users with $K \geq 5$ total purchase/cart events). The observation window is 2022-06-23 to 2022-12-08. Records were deduplicated and timestamps parsed. Results describe more active shoppers and may not generalize to the full Synerise population.
+
+\begin{table}[h]
+\centering
+\caption{Active-cohort event volumes used in this analysis.}
+\label{tab:data}
+\begin{tabular}{lrrr}
+\toprule
+Event type & Rows & Users & SKUs \\
+\midrule
+Add-to-cart & 4,890,231 & 510,728 & 1,069,877 \\
+Product buy & 1,171,501 & 293,044 & 449,958 \\
+Remove-from-cart & 2,229,315 & 423,386 & 741,269 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Unit of analysis}
+The primary unit is the unique \texttt{(client\_id, sku)} pair. For each pair we define the first cart time as the earliest add-to-cart timestamp and the first purchase time as the earliest purchase timestamp. A pair is a \emph{conversion} if a purchase of that SKU occurs \emph{strictly after} the first cart-add. This definition matches the project's preliminary EDA and excludes purchases that precede the cart signal.
+
+\subsection{Conversion metrics}
+We report:
+\begin{itemize}
+    \item \textbf{Pair-level conversion rate:} share of carted user--SKU pairs that subsequently convert;
+    \item \textbf{Prior-cart share among purchases:} share of purchased user--SKU pairs with a same-SKU cart-add before the purchase;
+    \item \textbf{User-level conversion rate:} among users with at least one cart event, the share with at least one converted pair;
+    \item \textbf{Remove-from-cart stratification:} an intervening remove is a remove after the first cart and before any subsequent purchase (or with no purchase).
+\end{itemize}
+
+\subsection{Time-gap analysis}
+For converted pairs only, we compute
+\begin{equation}
+\mathrm{gap} = t_{\mathrm{first\ purchase}} - t_{\mathrm{first\ cart}}
+\end{equation}
+in hours and days. We report percentiles, cumulative conversion within fixed windows (1~hour through 30~days), and coarse buckets (0--1h, 1--24h, 1--7d, 7--30d, $>30$d).
+
+\subsection{Scope and limitations of methods}
+Pair-level first-cart to first-later-purchase is an aggregate intent measure, not a session-level conversion probability. The Synerise release has no session IDs, so timing buckets are calendar elapsed time. Category-stratified conversion is out of scope here.
+
+\section{Results}
+
+\subsection{Conversion rates}
+Table~\ref{tab:conversion} summarizes conversion. Roughly one in four carted user--item pairs later converts. Among pairs that are purchased, 81.71\% had a prior same-SKU cart-add. About half of carting users convert at least once.
+
+\begin{table}[h]
+\centering
+\caption{Cart-to-purchase conversion summary (active cohort).}
+\label{tab:conversion}
+\begin{tabular}{lr}
+\toprule
+Metric & Result \\
+\midrule
+Carted user--SKU pairs & 3,537,047 \\
+Subsequently purchased pairs & 878,617 \\
+\textbf{Pair-level conversion rate} & \textbf{24.84\%} \\
+Purchased pairs with prior same-SKU cart & \textbf{81.71\%} \\
+Users with $\geq 1$ cart event & 510,728 \\
+Users with $\geq 1$ conversion & 269,271 \\
+\textbf{User-level conversion (among cart users)} & \textbf{52.72\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Remove-from-cart as a competing signal}
+Pairs without an intervening remove convert at more than three times the rate of pairs with a remove before purchase (or with no purchase after remove). Remove-from-cart is associated with substantially weaker purchase follow-through (Table~\ref{tab:remove}).
+
+\begin{table}[h]
+\centering
+\caption{Conversion by intervening remove-from-cart.}
+\label{tab:remove}
+\begin{tabular}{lrrr}
+\toprule
+Group & Carted pairs & Converted & Conversion rate \\
+\midrule
+No intervening remove & 1,966,261 & 702,449 & 35.73\% \\
+Removed before purchase / no buy & 1,570,786 & 176,168 & 11.22\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Time from cart-add to purchase}
+Among 878,617 converted pairs with a positive gap, the distribution is heavily right-skewed (Table~\ref{tab:gap}): the mean (31.65~hours) is much larger than the median (0.18~hours, approximately 11~minutes) because of a long tail of delayed purchases.
+
+\begin{table}[h]
+\centering
+\caption{Cart-to-purchase lag among converted pairs (hours).}
+\label{tab:gap}
+\begin{tabular}{lr}
+\toprule
+Statistic & Hours \\
+\midrule
+P25 & 0.05 \\
+\textbf{Median} & \textbf{0.18 ($\sim$11 minutes)} \\
+P75 & 1.63 \\
+P90 & 47.64 \\
+Mean & 31.65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cumulative timing among converters}
+Most conversions occur quickly (Table~\ref{tab:windows}): 72.13\% of eventual converters purchase within one hour, 86.52\% within 24~hours, and 95.49\% within seven days. Among converters, bucket shares are 72.1\% in 0--1h, 14.4\% in 1--24h, 9.0\% in 1--7d, 3.6\% in 7--30d, and 0.9\% beyond 30~days.
+
+\begin{table}[h]
+\centering
+\caption{Cumulative cart-to-purchase timing.}
+\label{tab:windows}
+\begin{tabular}{lrr}
+\toprule
+Window & Share of converters & Share of all carted pairs \\
+\midrule
+$\leq$ 1 hour & 72.13\% & 17.92\% \\
+$\leq$ 6 hours & 80.02\% & 19.88\% \\
+$\leq$ 24 hours & 86.52\% & 21.49\% \\
+$\leq$ 7 days & 95.49\% & 23.72\% \\
+$\leq$ 30 days & 99.07\% & 24.61\% \\
+Ever & 100\% & 24.84\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+
+\subsection{Cart is informative, not noise}
+A pair-level conversion rate of approximately 25\% is far from negligible. Cart history therefore carries predictive information about which items a user may buy next. Treating cart events as pure noise relative to purchase-only baselines would discard a substantial share of eventual purchases that are preceded by cart activity (81.71\% of purchased pairs).
+
+\subsection{Cart is timely relative to sparse purchases}
+Most conversions happen quickly: median lag $\approx$~11~minutes, and 86.5\% of converters purchase within 24~hours. Where many users have short purchase histories, recent cart events are typically more recent than older purchases. This supports the claim that cart activity can supply fresher intent than purchase history alone.
+
+\subsection{Cart is incomplete as a purchase label}
+About 75\% of carted pairs never convert. An intervening remove is associated with much lower conversion (11.22\% vs.\ 35.73\%). Modeling implications include: (i)~do not treat every cart-add as a guaranteed future purchase; (ii)~keep remove-from-cart and non-conversion as weak or negative signals in multi-behavior sequences; and (iii)~encode event type (buy / add / remove) rather than collapsing all interactions into one positive class.
+
+\subsection{Link to the modeling plan}
+These results motivate experiments that hold architecture fixed (e.g., SASRec) and compare purchase-only sequences to sequences that also include cart adds and removes. The short lag distribution also suggests that recency-aware encodings of cart events may matter. Whether cart usefulness varies by anonymized category remains a separate modeling question.
+
+\subsection{Limitations}
+Results apply to the active-user cohort ($K \geq 5$), not the full population. First-cart / first-purchase pairing ignores repeated carting and multi-purchase dynamics. Elapsed-time gaps are not true sessions. Observational associations (e.g., remove vs.\ conversion) are not causal. This report does not stratify by category or price.
+
+\section{Conclusion}
+On the Synerise RecSys~2025 active-user cohort, cart-to-purchase behavior supports the project hypothesis in three ways:
+\begin{enumerate}
+    \item \textbf{Material conversion:} approximately 24.84\% of carted user--SKU pairs later purchase the same item;
+    \item \textbf{Strong precursor role:} approximately 81.71\% of purchased pairs had a prior same-SKU cart-add;
+    \item \textbf{Short lag:} median cart-to-purchase time $\approx$~11~minutes; approximately 87\% of converters buy within 24~hours and 95\% within seven days.
+\end{enumerate}
+Together, these findings indicate that cart history is an informative and timely signal of purchase intent, while incomplete conversion and remove-from-cart patterns caution against treating cart-adds as hard positives. The appropriate next step is a controlled comparison of purchase-only versus cart-augmented sequential recommenders under a temporal evaluation split.
+
+\end{document}
