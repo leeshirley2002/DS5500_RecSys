@@ -11,15 +11,13 @@ This project will test whether incorporating cart history improves next-purchase
 DS5500_RecSys/
 ├── README.md                       # This file (proposal + how to run)
 ├── requirements.txt                # Python deps (EDA + modeling)
-├── configs/sasrec_default.yaml     # Default SASRec hyperparameters
 ├── DataIngestion_Subsample.ipynb   # Step 1: ingest, dedup, filter to K≥5 active users
 ├── preliminary_eda.ipynb           # Broad sparsity / cart-availability EDA
 ├── event_level_eda.ipynb           # Per-user sequence lengths, recency windows
 ├── Cart_to_Purchase_EDA.ipynb      # Cart→purchase conversion + time-gap EDA
 ├── ItemCategoryEDA.ipynb           # Item popularity + category clustering
 ├── figures/                        # PNG outputs written by the EDA notebooks
-├── src/ds5500_recsys/              # Modeling package (SASRec + behavior-aware SASRec)
-└── scripts/                        # train_behavior_sasrec.py, smoke_test_sasrec.py
+└── behavior_aware_sasrec/          # Dedicated modeling folder (SASRec + cart-aware SASRec)
 ```
 
 Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook loads the `*_subsampled.parquet` files (gitignored) produced by `DataIngestion_Subsample.ipynb`, but not all from the same location — see the path caveat below.
@@ -63,20 +61,20 @@ Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow`. Mo
 
 ## Modeling (Behavior-Aware SASRec)
 
-Purchase-only SASRec vs cart-aware SASRec (add-to-cart + remove-from-cart), same backbone, next-**purchase** targets, temporal split, metrics `HR@10` / `NDCG@10` / `MRR`.
+All modeling code lives in **`behavior_aware_sasrec/`**. Purchase-only SASRec vs cart-aware SASRec (add-to-cart + remove-from-cart), same backbone, next-**purchase** targets, temporal split, metrics `HR@10` / `NDCG@10` / `MRR`.
 
 ```bash
 # smoke test without parquet
-python scripts/smoke_test_sasrec.py
+python behavior_aware_sasrec/smoke_test.py
 
 # train on subsampled cohort
-python scripts/train_behavior_sasrec.py --data-dir data/subsampled --mode both --top-n-items 20000
+python behavior_aware_sasrec/train.py --data-dir data/subsampled --mode both --top-n-items 20000
 ```
 
-See `src/ds5500_recsys/README.md` for design details.
+See `behavior_aware_sasrec/README.md` for design details.
 
 ## Status & Open Work
 
 - Ingestion + EDA notebooks are present (see `figures/`).
-- **Behavior-aware SASRec implemented** under `src/ds5500_recsys/` (purchase-only baseline + cart-augmented variant).
+- **Behavior-aware SASRec implemented** under `behavior_aware_sasrec/` (purchase-only baseline + cart-augmented variant).
 - Follow-ups: run full-cohort training, add LightFM/Popularity baselines, category-conditioned variant, `pytest` + CI, normalize notebook data paths.

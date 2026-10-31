@@ -6,4 +6,5 @@ __pycache__/
 *.pyc
 .DS_Store
 artifacts/
+behavior_aware_sasrec/artifacts/
 *.pt

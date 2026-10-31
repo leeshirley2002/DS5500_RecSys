@@ -21,8 +21,8 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
 
 from ds5500_recsys.data.sequences import (  # noqa: E402
     build_user_sequences,
@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--patience", type=int, default=5)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", type=str, default="cpu")
-    p.add_argument("--output-dir", type=str, default="artifacts/models")
+    p.add_argument("--output-dir", type=str, default="behavior_aware_sasrec/artifacts")
     return p.parse_args()
 
 
