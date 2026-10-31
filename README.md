@@ -10,14 +10,14 @@ This project will test whether incorporating cart history improves next-purchase
 ```
 DS5500_RecSys/
 ├── README.md                       # This file (proposal + how to run)
-├── .gitignore                      # Ignores data/, *.parquet, *.csv, notebook checkpoints
+├── requirements.txt                # Python deps (EDA + modeling)
 ├── DataIngestion_Subsample.ipynb   # Step 1: ingest, dedup, filter to K≥5 active users
 ├── preliminary_eda.ipynb           # Broad sparsity / cart-availability EDA
 ├── event_level_eda.ipynb           # Per-user sequence lengths, recency windows
 ├── Cart_to_Purchase_EDA.ipynb      # Cart→purchase conversion + time-gap EDA
 ├── ItemCategoryEDA.ipynb           # Item popularity + category clustering
-├── preliminary_results_combined.png
-└── figures/                        # PNG outputs written by the EDA notebooks
+├── figures/                        # PNG outputs written by the EDA notebooks
+└── behavior_aware_sasrec/          # Dedicated modeling folder (SASRec + cart-aware SASRec)
 ```
 
 Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook loads the `*_subsampled.parquet` files (gitignored) produced by `DataIngestion_Subsample.ipynb`, but not all from the same location — see the path caveat below.
@@ -53,10 +53,22 @@ The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.p
 
 ## Requirements
 
-Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow` (for parquet I/O). No pinned `requirements.txt` exists yet — see Open Work below.
+```bash
+pip install -r requirements.txt
+```
+
+Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow`. Modeling uses `torch` and `tqdm`.
+
+## Modeling (Behavior-Aware SASRec)
+
+Modeling lives in the self-contained notebook **`behavior_aware_sasrec/Behavior_Aware_SASRec.ipynb`**. Purchase-only SASRec vs cart-aware SASRec (add-to-cart + remove-from-cart), same backbone, next-**purchase** targets, temporal split, metrics `HR@10` / `NDCG@10` / `MRR`.
+
+Open the notebook and Run All (`USE_SYNTHETIC=True` for a dry run; `False` + `data/subsampled/` for the real cohort).
+
+See `behavior_aware_sasrec/README.md` for design details.
 
 ## Status & Open Work
 
-- The ingestion and EDA notebooks for the hypothesis are present (see `figures/` and each notebook's takeaways).
-- **Modeling phase** is the next milestone: build a purchase-history-only baseline and a cart-aware model, with temporal train/test splits and ranking metrics (Recall@K, NDCG@K), following the controlled-experiment setup described in `ItemCategoryEDA.ipynb` §4.
-- Follow-ups worth tracking: add `pyproject.toml` + `pytest`, a CI workflow, refactor notebook logic into a `ds5500_recsys/` package, and normalize the per-notebook data paths above into one shared config.
+- Ingestion + EDA notebooks are present (see `figures/`).
+- **Behavior-aware SASRec implemented** under `behavior_aware_sasrec/` (purchase-only baseline + cart-augmented variant).
+- Follow-ups: run full-cohort training, add LightFM/Popularity baselines, category-conditioned variant, `pytest` + CI, normalize notebook data paths.
