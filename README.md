@@ -63,11 +63,13 @@ Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow`. Mo
 
 All modeling code lives in **`behavior_aware_sasrec/`**. Purchase-only SASRec vs cart-aware SASRec (add-to-cart + remove-from-cart), same backbone, next-**purchase** targets, temporal split, metrics `HR@10` / `NDCG@10` / `MRR`.
 
-```bash
-# smoke test without parquet
-python behavior_aware_sasrec/smoke_test.py
+Preferred: open `behavior_aware_sasrec/Behavior_Aware_SASRec.ipynb` and Run All  
+(`USE_SYNTHETIC=True` for a dry run; `False` + `data/subsampled/` for the real cohort).
 
-# train on subsampled cohort
+CLI alternative:
+
+```bash
+python behavior_aware_sasrec/smoke_test.py
 python behavior_aware_sasrec/train.py --data-dir data/subsampled --mode both --top-n-items 20000
 ```
 

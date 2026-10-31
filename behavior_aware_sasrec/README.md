@@ -9,15 +9,16 @@ Purchase-only SASRec vs behavior-aware SASRec (`add_to_cart` + `remove_from_cart
 ```
 behavior_aware_sasrec/
 ├── README.md
+├── Behavior_Aware_SASRec.ipynb   # preferred: step-by-step notebook
 ├── configs/default.yaml
-├── train.py                 # CLI: train on Synerise subsample or synthetic data
-├── smoke_test.py            # quick synthetic end-to-end check
-├── ds5500_recsys/           # Python package
-│   ├── data/                # sequences, temporal split, dataset
-│   ├── models/sasrec.py     # SASRec + BehaviorAwareSASRec
+├── train.py                      # optional CLI
+├── smoke_test.py                 # quick synthetic CLI check
+├── ds5500_recsys/                # Python package used by the notebook
+│   ├── data/
+│   ├── models/sasrec.py
 │   ├── metrics.py
-│   └── train.py             # training / eval loops
-└── artifacts/               # checkpoints (gitignored)
+│   └── train.py
+└── artifacts/                    # checkpoints (gitignored)
 ```
 
 ## Design
