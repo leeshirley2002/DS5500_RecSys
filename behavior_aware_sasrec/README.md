@@ -6,8 +6,7 @@ Dedicated folder for cart-aware sequential recommendation modeling.
 
 ```
 behavior_aware_sasrec/
-├── Behavior_Aware_SASRec.ipynb   # main notebook (run this)
-├── ds5500_recsys/                # package imported by the notebook
+├── Behavior_Aware_SASRec.ipynb   # self-contained notebook (run this)
 └── artifacts/                    # checkpoints (gitignored)
 ```
 
