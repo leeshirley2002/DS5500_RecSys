@@ -1,0 +1,19 @@
+# Default hyperparameters for SASRec / BehaviorAwareSASRec
+mode: both  # purchase_only | behavior_aware | both
+data_dir: data/subsampled
+top_n_items: 20000
+min_buys: 2
+max_len: 50
+hidden_size: 64
+n_blocks: 2
+n_heads: 1
+dropout: 0.2
+batch_size: 256
+lr: 0.001
+epochs: 30
+n_negatives: 1
+eval_negatives: 100
+patience: 5
+seed: 42
+device: cuda  # set to cpu if no GPU
+output_dir: artifacts/models
