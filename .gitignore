@@ -8,3 +8,4 @@ __pycache__/
 *.pt
 artifacts/sasrec_shared_run/
 artifacts/sasrec_shared_synthetic/
+artifacts/step3_sasrec/
