@@ -11,13 +11,18 @@ This project will test whether incorporating cart history improves next-purchase
 DS5500_RecSys/
 ├── README.md                       # This file (proposal + how to run)
 ├── .gitignore                      # Ignores data/, *.parquet, *.csv, notebook checkpoints
-├── DataIngestion_Subsample.ipynb   # Step 1: ingest, dedup, filter to K≥5 active users
-├── preliminary_eda.ipynb           # Broad sparsity / cart-availability EDA
-├── event_level_eda.ipynb           # Per-user sequence lengths, recency windows
-├── Cart_to_Purchase_EDA.ipynb      # Cart→purchase conversion + time-gap EDA
-├── ItemCategoryEDA.ipynb           # Item popularity + category clustering
+├── DataIngestion_Subsample.ipynb   # Ingest, dedup, filter to K≥5 active users
+├── Step1_SequenceConstruction.ipynb
+├── Step2_CandidateSampling_PopularityBaseline.ipynb
+├── Behavior_Aware_SASRec.ipynb     # Purchase-only + cart-aware SASRec (shared eval)
+├── evaluation_utils.py             # Shared HitRate@10 / NDCG@10 / MRR
+├── artifacts/                      # Shared splits + candidate sets (+ model runs)
+├── preliminary_eda.ipynb
+├── event_level_eda.ipynb
+├── Cart_to_Purchase_EDA.ipynb
+├── ItemCategoryEDA.ipynb
 ├── preliminary_results_combined.png
-└── figures/                        # PNG outputs written by the EDA notebooks
+└── figures/
 ```
 
 Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook loads the `*_subsampled.parquet` files (gitignored) produced by `DataIngestion_Subsample.ipynb`, but not all from the same location — see the path caveat below.
@@ -26,7 +31,10 @@ Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook 
 
 | Notebook | Purpose |
 |---|---|
-| `DataIngestion_Subsample.ipynb` | Step 1: ingest raw events, define active users (K≥5), write `data/subsampled/` |
+| `DataIngestion_Subsample.ipynb` | Ingest raw events, define active users (K≥5), write `data/subsampled/` |
+| `Step1_SequenceConstruction.ipynb` | Shared purchase sequences + 14/14-day temporal split + `item_to_idx` |
+| `Step2_CandidateSampling_PopularityBaseline.ipynb` | Shared 100-neg candidate sets + popularity baseline |
+| `Behavior_Aware_SASRec.ipynb` | Purchase-only vs cart-aware SASRec using shared candidates / `evaluation_utils.py` |
 | `preliminary_eda.ipynb` | Broad preliminary EDA (sparsity, cart availability) |
 | `event_level_eda.ipynb` | Per-user sequence lengths, 7/14/30-day recency windows |
 | `Cart_to_Purchase_EDA.ipynb` | Dedicated cart→purchase conversion rate + time-gap EDA (hypothesis signal) |
@@ -55,8 +63,17 @@ The raw dataset is not bundled with the repo (see `.gitignore` → `data/`, `*.p
 
 Notebooks use `pandas`, `numpy`, `matplotlib`, `scikit-learn`, and `pyarrow` (for parquet I/O). No pinned `requirements.txt` exists yet — see Open Work below.
 
+## Modeling (shared evaluation)
+
+Downstream models should **not** resample candidates. Load:
+
+- `artifacts/sequences_and_splits.pkl` — train sequences, val/test targets, shared `item_to_idx`
+- `artifacts/shared_evaluation_candidates.pkl` — 100 negatives + 1 target per eval user (original product IDs)
+- `evaluation_utils.py` — `evaluate_model_dataset(...)`
+
+`Behavior_Aware_SASRec.ipynb` scores those candidates in list order (mapping IDs with `item_to_idx`) for purchase-only and behavior-aware SASRec. Use `EVAL_SPLIT="val"` while developing; keep test for the final comparison.
+
 ## Status & Open Work
 
-- The ingestion and EDA notebooks for the hypothesis are present (see `figures/` and each notebook's takeaways).
-- **Modeling phase** is the next milestone: build a purchase-history-only baseline and a cart-aware model, with temporal train/test splits and ranking metrics (Recall@K, NDCG@K), following the controlled-experiment setup described in `ItemCategoryEDA.ipynb` §4.
-- Follow-ups worth tracking: add `pyproject.toml` + `pytest`, a CI workflow, refactor notebook logic into a `ds5500_recsys/` package, and normalize the per-notebook data paths above into one shared config.
+- Ingestion, EDA, shared sequence/candidate artifacts, popularity baseline, and cart-aware SASRec notebook are present.
+- Follow-ups: full-cohort SASRec runs, LightFM / other baselines, category-conditioned variant, `pytest` + CI, normalize notebook data paths.

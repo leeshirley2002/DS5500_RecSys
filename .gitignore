@@ -5,3 +5,6 @@ data/
 __pycache__/
 *.pyc
 .DS_Store
+*.pt
+artifacts/sasrec_shared_run/
+artifacts/sasrec_shared_synthetic/
