@@ -14,7 +14,7 @@ DS5500_RecSys/
 ├── DataIngestion_Subsample.ipynb   # Ingest, dedup, filter to K≥5 active users
 ├── Step1_SequenceConstruction.ipynb
 ├── Step2_CandidateSampling_PopularityBaseline.ipynb
-├── Step3_BehaviorAware_SASRec.ipynb  # Purchase-only + cart-aware SASRec on shared eval
+├── Step3_BehaviorAware_SASRec.ipynb  # Cart-aware SASRec on shared Step2 eval
 ├── Behavior_Aware_SASRec.ipynb       # Redirect → Step3
 ├── evaluation_utils.py               # Shared HitRate@10 / NDCG@10 / MRR
 ├── artifacts/                        # Shared splits + candidate sets (+ model runs)
@@ -35,7 +35,7 @@ Notebooks are not run in a fixed order beyond Step 1 → EDA; each EDA notebook 
 | `DataIngestion_Subsample.ipynb` | Ingest raw events, define active users (K≥5), write `data/subsampled/` |
 | `Step1_SequenceConstruction.ipynb` | Shared purchase sequences + 14/14-day temporal split + `item_to_idx` |
 | `Step2_CandidateSampling_PopularityBaseline.ipynb` | Shared 100-neg candidate sets + popularity baseline |
-| `Step3_BehaviorAware_SASRec.ipynb` | Purchase-only + cart-aware SASRec on Step2 candidates / `evaluation_utils.py` |
+| `Step3_BehaviorAware_SASRec.ipynb` | Cart-aware SASRec on Step2 candidates / `evaluation_utils.py` |
 | `preliminary_eda.ipynb` | Broad preliminary EDA (sparsity, cart availability) |
 | `event_level_eda.ipynb` | Per-user sequence lengths, 7/14/30-day recency windows |
 | `Cart_to_Purchase_EDA.ipynb` | Dedicated cart→purchase conversion rate + time-gap EDA (hypothesis signal) |
@@ -72,7 +72,7 @@ Downstream models should **not** resample candidates. Load:
 - `artifacts/shared_evaluation_candidates.pkl` — 100 negatives + 1 target per eval user (original product IDs)
 - `evaluation_utils.py` — `evaluate_model_dataset(...)`
 
-`Step3_BehaviorAware_SASRec.ipynb` builds directly on Step2: same users/targets/candidates/metrics, with purchase-only SASRec and a cart-aware variant (`add_to_cart` / `remove_from_cart` before `val_cutoff`). Use validation for model selection; keep test for the final comparison.
+`Step3_BehaviorAware_SASRec.ipynb` builds directly on Step2: same users/targets/candidates/metrics, training **cart-aware SASRec only** (`add_to_cart` / `remove_from_cart` before `val_cutoff`). Use validation for model selection; keep test for the final comparison.
 
 ## Status & Open Work
 
